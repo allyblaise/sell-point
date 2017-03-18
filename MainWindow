@@ -1,0 +1,1456 @@
+
+package sellPoint;
+
+import java.awt.Color;
+import java.awt.Desktop;
+import java.awt.Image;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.sql.*;
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+import javax.imageio.ImageIO;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.Timer;
+import javax.swing.filechooser.FileSystemView;
+import net.proteanit.sql.DbUtils;
+import net.sf.jasperreports.engine.JRException;
+import net.sf.jasperreports.engine.JasperCompileManager;
+import net.sf.jasperreports.engine.JasperExportManager;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.JasperReport;
+import org.apache.commons.io.FileUtils;
+import java.io.File;
+
+
+/**
+ *
+ * @author Allyblaise
+ */
+public class MainWindow extends javax.swing.JFrame {
+String dateFormat = "yyyy-MM-dd HH:mm:ss";String strdateFormat="yyyy-MM-dd";
+Connection conn;PreparedStatement ps;ResultSet rs;public static String uname="";Calendar c;
+
+private List<String> fileList;
+public final String MASTER_KEY = "";
+String AbsolutePath = "\\Sell point\\";
+String documents = "";
+double dailycredit = 0D;
+    /**
+     * Creates new form Home
+     */
+    public MainWindow(String username) {
+        initComponents();
+        conn=new Db().connectDb();
+        if(!username.equals(""))
+            this.uname = username;
+        if(username.equals(MASTER_KEY)){
+            lbltitle.setText("Welcome to Sell point SUPER USER");
+        }else{
+            lbltitle.setText("Welcome to Sell point "+username);
+            /*
+            try {
+                AbsolutePath = new File(".").getCanonicalPath();
+            } catch (IOException ex) {
+                Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            */
+           
+        }
+        checkCaisse();
+        documents = FileSystemView.getFileSystemView().getDefaultDirectory().getPath();
+        fileList = new ArrayList<String>();
+        if(getPrivilege()==0){
+            //i.e admin
+            btnvente.setEnabled(false);
+            menusell.setEnabled(false);
+            btncaisse.setEnabled(true);
+        }else if(getPrivilege()==1){
+            btnvente.setEnabled(true);
+            menusell.setEnabled(true);
+            
+            btnstock.setEnabled(false);
+            menustock.setEnabled(false);
+            
+            btnusers.setEnabled(false);
+            menuser.setEnabled(false);
+            
+            btnachat.setEnabled(false);
+            menubuy.setEnabled(false);
+            btncaisse.setEnabled(true);
+            btnprofit.setEnabled(false);
+        }
+        c = Calendar.getInstance();
+        Image i;
+    try {
+        i = ImageIO.read(getClass().getResource("/resources/logo.png"));
+        setIconImage(i);
+    } catch (IOException ex) {
+        writeLog(ex.getMessage(), MainWindow.class.getName());
+        //JOptionPane.showMessageDialog(null, ex.getMessage(),"erreur de photo IO",JOptionPane.ERROR_MESSAGE);
+        Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+    }
+        
+        populateTable1();
+        populateTable2();
+        updateTime();
+        Timer tm = new Timer(1000, new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+               updateTime();
+            }
+        });
+        tm.start();
+        if(createFile())
+            System.out.println("Folder created.");
+        
+    }
+    private int getPrivilege(){
+        try {
+        String sql = "select type from users where username=?";
+        ps=conn.prepareStatement(sql);
+        ps.setString(1, uname);
+        rs=ps.executeQuery();
+        if(rs.next())
+            return rs.getInt(1);
+        else if(uname.equals(MASTER_KEY))
+            return 0;
+        else if(uname.equals(""))
+            return 2;
+        } catch (SQLException ex) {
+            Logger.getLogger(Vente.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        JOptionPane.showMessageDialog(null, "Access right error, contact admin","Access error",JOptionPane.ERROR_MESSAGE);
+        dispose();
+        return 5;
+    }
+    public void updateTime(){
+        DateFormat df = new SimpleDateFormat(dateFormat);
+        Calendar c= Calendar.getInstance();
+        Date dt = c.getTime();
+        lbldate.setText(df.format(dt));
+    }
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
+     */
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">                          
+    private void initComponents() {
+
+        jPanel1 = new javax.swing.JPanel();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        jTable1 = new javax.swing.JTable();
+        jPanel2 = new javax.swing.JPanel();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        jTable2 = new javax.swing.JTable();
+        jLabel2 = new javax.swing.JLabel();
+        lblexp = new javax.swing.JLabel();
+        jLabel4 = new javax.swing.JLabel();
+        lbltotal = new javax.swing.JLabel();
+        jLabel5 = new javax.swing.JLabel();
+        lblcredit = new javax.swing.JLabel();
+        jLabel6 = new javax.swing.JLabel();
+        lblpaied = new javax.swing.JLabel();
+        jPanel4 = new javax.swing.JPanel();
+        jLabel3 = new javax.swing.JLabel();
+        lbldate = new javax.swing.JLabel();
+        lblallcredit = new javax.swing.JLabel();
+        jPanel5 = new javax.swing.JPanel();
+        btnvente = new javax.swing.JButton();
+        btnachat = new javax.swing.JButton();
+        btnstock = new javax.swing.JButton();
+        btnbackup = new javax.swing.JButton();
+        btnusers = new javax.swing.JButton();
+        btnlogout = new javax.swing.JButton();
+        btnsellslist = new javax.swing.JButton();
+        btnpass = new javax.swing.JButton();
+        btnprofit = new javax.swing.JButton();
+        btncaisse = new javax.swing.JButton();
+        btnrefresh1 = new javax.swing.JButton();
+        btncredit = new javax.swing.JButton();
+        btnoutput = new javax.swing.JButton();
+        btnincome = new javax.swing.JButton();
+        jLabel1 = new javax.swing.JLabel();
+        lbltitle = new javax.swing.JLabel();
+        jMenuBar1 = new javax.swing.JMenuBar();
+        jMenu1 = new javax.swing.JMenu();
+        menustock = new javax.swing.JMenuItem();
+        menusell = new javax.swing.JMenuItem();
+        menubuy = new javax.swing.JMenuItem();
+        menuser = new javax.swing.JMenuItem();
+        menubackup = new javax.swing.JMenuItem();
+        jMenu2 = new javax.swing.JMenu();
+        menuproduit = new javax.swing.JMenuItem();
+        menurepportvent = new javax.swing.JMenuItem();
+        menurepportachat = new javax.swing.JMenuItem();
+        jMenu3 = new javax.swing.JMenu();
+        jSeparator1 = new javax.swing.JPopupMenu.Separator();
+        jMenuItem3 = new javax.swing.JMenuItem();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Sell point");
+        setResizable(false);
+
+        jPanel1.setBackground(new java.awt.Color(51, 51, 51));
+        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Today stock", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Century Gothic", 1, 14), new java.awt.Color(255, 255, 255))); // NOI18N
+
+        jTable1.setBackground(new java.awt.Color(51, 51, 51));
+        jTable1.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
+        jTable1.setForeground(new java.awt.Color(255, 255, 255));
+        jTable1.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null}
+            },
+            new String [] {
+                "Title 1", "Title 2", "Title 3", "Title 4"
+            }
+        ));
+        jTable1.setEnabled(false);
+        jTable1.setRowHeight(25);
+        jScrollPane1.setViewportView(jTable1);
+
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 291, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane1)
+        );
+
+        jPanel2.setBackground(new java.awt.Color(102, 0, 51));
+        jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Today Sell", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Century Gothic", 1, 14), new java.awt.Color(255, 255, 255))); // NOI18N
+
+        jTable2.setBackground(new java.awt.Color(102, 0, 51));
+        jTable2.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
+        jTable2.setForeground(new java.awt.Color(255, 255, 255));
+        jTable2.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null}
+            },
+            new String [] {
+                "Title 1", "Title 2", "Title 3", "Title 4"
+            }
+        ));
+        jTable2.setEnabled(false);
+        jTable2.setRowHeight(25);
+        jScrollPane2.setViewportView(jTable2);
+
+        jLabel2.setFont(new java.awt.Font("Century Gothic", 0, 14)); // NOI18N
+        jLabel2.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel2.setText("Expenses:");
+
+        lblexp.setFont(new java.awt.Font("Century Gothic", 1, 14)); // NOI18N
+        lblexp.setForeground(new java.awt.Color(255, 255, 255));
+        lblexp.setText("0 Rwf");
+
+        jLabel4.setFont(new java.awt.Font("Century Gothic", 0, 14)); // NOI18N
+        jLabel4.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel4.setText("Total:");
+        jLabel4.setToolTipText("total sells - credit +paied credit");
+
+        lbltotal.setFont(new java.awt.Font("Century Gothic", 1, 14)); // NOI18N
+        lbltotal.setForeground(new java.awt.Color(255, 255, 255));
+        lbltotal.setText("0 Rwf");
+        lbltotal.setToolTipText("total sells - credit +paied credit");
+
+        jLabel5.setFont(new java.awt.Font("Century Gothic", 0, 14)); // NOI18N
+        jLabel5.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel5.setText("Credit:");
+
+        lblcredit.setFont(new java.awt.Font("Century Gothic", 1, 14)); // NOI18N
+        lblcredit.setForeground(new java.awt.Color(255, 255, 255));
+        lblcredit.setText("0 Rwf");
+
+        jLabel6.setFont(new java.awt.Font("Century Gothic", 0, 14)); // NOI18N
+        jLabel6.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel6.setText("Paied credit:");
+
+        lblpaied.setFont(new java.awt.Font("Century Gothic", 1, 14)); // NOI18N
+        lblpaied.setForeground(new java.awt.Color(255, 255, 255));
+        lblpaied.setText("0 Rwf");
+
+        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
+        jPanel2.setLayout(jPanel2Layout);
+        jPanel2Layout.setHorizontalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 296, Short.MAX_VALUE)
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 93, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(lblexp, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 93, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(lbltotal, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 93, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(lblcredit, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 93, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(lblpaied, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                .addContainerGap())
+        );
+        jPanel2Layout.setVerticalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 389, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel2)
+                    .addComponent(lblexp))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel5)
+                    .addComponent(lblcredit))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel6)
+                    .addComponent(lblpaied))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel4)
+                    .addComponent(lbltotal))
+                .addContainerGap())
+        );
+
+        jPanel4.setBackground(new java.awt.Color(204, 204, 204));
+        jPanel4.setBorder(javax.swing.BorderFactory.createEtchedBorder(javax.swing.border.EtchedBorder.RAISED));
+
+        jLabel3.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        jLabel3.setText("Sell point");
+
+        lbldate.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        lbldate.setText("jLabel1");
+        lbldate.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+
+        lblallcredit.setBackground(new java.awt.Color(255, 255, 255));
+        lblallcredit.setFont(new java.awt.Font("Century Gothic", 3, 14)); // NOI18N
+        lblallcredit.setForeground(new java.awt.Color(204, 0, 51));
+        lblallcredit.setText("Whole credit: 0 Rwf");
+
+        javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
+        jPanel4.setLayout(jPanel4Layout);
+        jPanel4Layout.setHorizontalGroup(
+            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel4Layout.createSequentialGroup()
+                .addGap(47, 47, 47)
+                .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 208, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(119, 119, 119)
+                .addComponent(lblallcredit, javax.swing.GroupLayout.PREFERRED_SIZE, 349, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(lbldate, javax.swing.GroupLayout.PREFERRED_SIZE, 177, javax.swing.GroupLayout.PREFERRED_SIZE))
+        );
+        jPanel4Layout.setVerticalGroup(
+            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel4Layout.createSequentialGroup()
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel3)
+                    .addComponent(lbldate)
+                    .addComponent(lblallcredit))
+                .addGap(0, 2, Short.MAX_VALUE))
+        );
+
+        btnvente.setBackground(new java.awt.Color(255, 255, 255));
+        btnvente.setText("Sell");
+        btnvente.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                btnventeMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                btnventeMouseExited(evt);
+            }
+        });
+        btnvente.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnventeActionPerformed(evt);
+            }
+        });
+
+        btnachat.setBackground(new java.awt.Color(255, 255, 255));
+        btnachat.setText("Buy");
+        btnachat.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        btnachat.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                btnachatMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                btnachatMouseExited(evt);
+            }
+        });
+        btnachat.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnachatActionPerformed(evt);
+            }
+        });
+
+        btnstock.setBackground(new java.awt.Color(255, 255, 255));
+        btnstock.setText("Stock");
+        btnstock.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                btnstockMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                btnstockMouseExited(evt);
+            }
+        });
+        btnstock.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnstockActionPerformed(evt);
+            }
+        });
+
+        btnbackup.setBackground(new java.awt.Color(255, 255, 255));
+        btnbackup.setText("Backup");
+        btnbackup.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                btnbackupMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                btnbackupMouseExited(evt);
+            }
+        });
+        btnbackup.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnbackupActionPerformed(evt);
+            }
+        });
+
+        btnusers.setBackground(new java.awt.Color(255, 255, 255));
+        btnusers.setText("Users");
+        btnusers.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                btnusersMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                btnusersMouseExited(evt);
+            }
+        });
+        btnusers.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnusersActionPerformed(evt);
+            }
+        });
+
+        btnlogout.setBackground(new java.awt.Color(255, 255, 255));
+        btnlogout.setText("Logout");
+        btnlogout.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                btnlogoutMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                btnlogoutMouseExited(evt);
+            }
+        });
+        btnlogout.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnlogoutActionPerformed(evt);
+            }
+        });
+
+        btnsellslist.setBackground(new java.awt.Color(255, 255, 255));
+        btnsellslist.setText("Sell List");
+        btnsellslist.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                btnsellslistMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                btnsellslistMouseExited(evt);
+            }
+        });
+        btnsellslist.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnsellslistActionPerformed(evt);
+            }
+        });
+
+        btnpass.setBackground(new java.awt.Color(51, 51, 51));
+        btnpass.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        btnpass.setForeground(new java.awt.Color(255, 255, 255));
+        btnpass.setText("Change password");
+        btnpass.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnpassActionPerformed(evt);
+            }
+        });
+
+        btnprofit.setBackground(new java.awt.Color(255, 255, 255));
+        btnprofit.setText("Profit");
+        btnprofit.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                btnprofitMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                btnprofitMouseExited(evt);
+            }
+        });
+        btnprofit.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnprofitActionPerformed(evt);
+            }
+        });
+
+        btncaisse.setBackground(new java.awt.Color(255, 255, 255));
+        btncaisse.setText("Caisse");
+        btncaisse.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                btncaisseMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                btncaisseMouseExited(evt);
+            }
+        });
+        btncaisse.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btncaisseActionPerformed(evt);
+            }
+        });
+
+        btnrefresh1.setBackground(new java.awt.Color(0, 102, 0));
+        btnrefresh1.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        btnrefresh1.setForeground(new java.awt.Color(255, 255, 255));
+        btnrefresh1.setText("Refresh");
+        btnrefresh1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnrefresh1ActionPerformed(evt);
+            }
+        });
+
+        btncredit.setBackground(new java.awt.Color(255, 255, 255));
+        btncredit.setText("Credit");
+        btncredit.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                btncreditMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                btncreditMouseExited(evt);
+            }
+        });
+        btncredit.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btncreditActionPerformed(evt);
+            }
+        });
+
+        btnoutput.setBackground(new java.awt.Color(255, 255, 255));
+        btnoutput.setText("Output");
+        btnoutput.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                btnoutputMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                btnoutputMouseExited(evt);
+            }
+        });
+        btnoutput.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnoutputActionPerformed(evt);
+            }
+        });
+
+        btnincome.setBackground(new java.awt.Color(255, 255, 255));
+        btnincome.setText("Income");
+        btnincome.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                btnincomeMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                btnincomeMouseExited(evt);
+            }
+        });
+        btnincome.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnincomeActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
+        jPanel5.setLayout(jPanel5Layout);
+        jPanel5Layout.setHorizontalGroup(
+            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel5Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel5Layout.createSequentialGroup()
+                        .addComponent(btnpass, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(btnrefresh1, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap())
+                    .addGroup(jPanel5Layout.createSequentialGroup()
+                        .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel5Layout.createSequentialGroup()
+                                .addComponent(btnvente, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(btnachat, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(jPanel5Layout.createSequentialGroup()
+                                .addComponent(btnstock, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(btnbackup, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(13, 13, 13))
+                    .addGroup(jPanel5Layout.createSequentialGroup()
+                        .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                            .addComponent(btnsellslist, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(btnusers, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(btncaisse, javax.swing.GroupLayout.DEFAULT_SIZE, 115, Short.MAX_VALUE)
+                            .addComponent(btnoutput, javax.swing.GroupLayout.DEFAULT_SIZE, 115, Short.MAX_VALUE))
+                        .addGap(18, 22, Short.MAX_VALUE)
+                        .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(btnlogout, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(btnprofit, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(btncredit, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(btnincome, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addContainerGap())))
+        );
+        jPanel5Layout.setVerticalGroup(
+            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel5Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnvente, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnachat, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(20, 20, 20)
+                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnstock, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnbackup, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(21, 21, 21)
+                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(btnusers, javax.swing.GroupLayout.DEFAULT_SIZE, 53, Short.MAX_VALUE)
+                    .addComponent(btnlogout, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(18, 18, 18)
+                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnsellslist, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnprofit, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btncaisse, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btncredit, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnoutput, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnincome, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnpass, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnrefresh1, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resources/sellpointbanner.jpg"))); // NOI18N
+        jLabel1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jLabel1MouseClicked(evt);
+            }
+        });
+
+        lbltitle.setFont(new java.awt.Font("Century Gothic", 1, 24)); // NOI18N
+        lbltitle.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lbltitle.setText("Welcome to Sell point");
+
+        jMenu1.setText("File");
+
+        menustock.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S, java.awt.event.InputEvent.ALT_MASK | java.awt.event.InputEvent.CTRL_MASK));
+        menustock.setText("Stock");
+        menustock.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menustockActionPerformed(evt);
+            }
+        });
+        jMenu1.add(menustock);
+
+        menusell.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_V, java.awt.event.InputEvent.ALT_MASK | java.awt.event.InputEvent.CTRL_MASK));
+        menusell.setText("Sell");
+        menusell.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menusellActionPerformed(evt);
+            }
+        });
+        jMenu1.add(menusell);
+
+        menubuy.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_B, java.awt.event.InputEvent.ALT_MASK | java.awt.event.InputEvent.CTRL_MASK));
+        menubuy.setText("Buy");
+        menubuy.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menubuyActionPerformed(evt);
+            }
+        });
+        jMenu1.add(menubuy);
+
+        menuser.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_U, java.awt.event.InputEvent.ALT_MASK | java.awt.event.InputEvent.CTRL_MASK));
+        menuser.setText("Users");
+        menuser.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuserActionPerformed(evt);
+            }
+        });
+        jMenu1.add(menuser);
+
+        menubackup.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_A, java.awt.event.InputEvent.ALT_MASK | java.awt.event.InputEvent.CTRL_MASK));
+        menubackup.setText("Backup");
+        menubackup.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menubackupActionPerformed(evt);
+            }
+        });
+        jMenu1.add(menubackup);
+
+        jMenuBar1.add(jMenu1);
+
+        jMenu2.setText("Report");
+
+        menuproduit.setText("Product");
+        menuproduit.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuproduitActionPerformed(evt);
+            }
+        });
+        jMenu2.add(menuproduit);
+
+        menurepportvent.setText("Sell");
+        menurepportvent.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menurepportventActionPerformed(evt);
+            }
+        });
+        jMenu2.add(menurepportvent);
+
+        menurepportachat.setText("Buy");
+        menurepportachat.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menurepportachatActionPerformed(evt);
+            }
+        });
+        jMenu2.add(menurepportachat);
+
+        jMenuBar1.add(jMenu2);
+
+        jMenu3.setText("Developer");
+        jMenu3.add(jSeparator1);
+
+        jMenuItem3.setText("DB");
+        jMenuItem3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem3ActionPerformed(evt);
+            }
+        });
+        jMenu3.add(jMenuItem3);
+
+        jMenuBar1.add(jMenu3);
+
+        setJMenuBar(jMenuBar1);
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(lbltitle, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 1035, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 95, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(lbltitle)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                    .addComponent(jPanel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+        );
+
+        pack();
+        setLocationRelativeTo(null);
+    }// </editor-fold>                        
+ 
+    private void menustockActionPerformed(java.awt.event.ActionEvent evt) {                                          
+        // TODO add your handling code here:
+        new stock(this,true).setVisible(true);
+    }                                         
+
+    private void menusellActionPerformed(java.awt.event.ActionEvent evt) {                                         
+        // TODO add your handling code here:
+        new Vente(this,true,uname).setVisible(true);
+    }                                        
+
+    private void menubackupActionPerformed(java.awt.event.ActionEvent evt) {                                           
+        // TODO add your handling code here:
+       try {
+        // TODO add your handling code here:
+        backUpDatabase(conn);
+    } catch (SQLException ex) {
+        Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+    } catch (IOException ex) {
+        Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    }                                          
+
+    private void menubuyActionPerformed(java.awt.event.ActionEvent evt) {                                        
+        // TODO add your handling code here:
+        new Buy(this,true).setVisible(true);
+    }                                       
+
+    private void menuserActionPerformed(java.awt.event.ActionEvent evt) {                                        
+        // TODO add your handling code here:
+        new User(uname).setVisible(true);
+    }                                       
+
+    private void btnstockActionPerformed(java.awt.event.ActionEvent evt) {                                         
+
+        new stock(this, true).setVisible(true);
+    }                                        
+
+    private void btnventeMouseEntered(java.awt.event.MouseEvent evt) {                                      
+        // TODO add your handling code here:
+        btnvente.setBackground(Color.CYAN);
+    }                                     
+
+    private void btnventeMouseExited(java.awt.event.MouseEvent evt) {                                     
+        // TODO add your handling code here:
+        btnvente.setBackground(Color.white);
+    }                                    
+
+    private void btnachatMouseEntered(java.awt.event.MouseEvent evt) {                                      
+        // TODO add your handling code here:
+        btnachat.setBackground(Color.CYAN);
+    }                                     
+
+    private void btnstockMouseEntered(java.awt.event.MouseEvent evt) {                                      
+        // TODO add your handling code here:
+        btnstock.setBackground(Color.CYAN);
+    }                                     
+
+    private void btnbackupMouseEntered(java.awt.event.MouseEvent evt) {                                       
+        // TODO add your handling code here:
+        btnbackup.setBackground(Color.CYAN);
+    }                                      
+
+    private void btnachatMouseExited(java.awt.event.MouseEvent evt) {                                     
+        // TODO add your handling code here:
+        btnachat.setBackground(Color.white);
+    }                                    
+
+    private void btnstockMouseExited(java.awt.event.MouseEvent evt) {                                     
+        // TODO add your handling code here:
+        btnstock.setBackground(Color.white);
+    }                                    
+
+    private void btnbackupMouseExited(java.awt.event.MouseEvent evt) {                                      
+        // TODO add your handling code here:
+        btnbackup.setBackground(Color.white);
+    }                                     
+
+    private void btnbackupActionPerformed(java.awt.event.ActionEvent evt) {                                          
+    try {
+        // TODO add your handling code here:
+        backUpDatabase(conn);
+    } catch (SQLException ex) {
+        Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+    } catch (IOException ex) {
+        Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    }                                         
+
+    private void btnventeActionPerformed(java.awt.event.ActionEvent evt) {                                         
+        // TODO add your handling code here:
+        new Vente(this, true,uname).setVisible(true);
+    }                                        
+
+    private void btnachatActionPerformed(java.awt.event.ActionEvent evt) {                                         
+        // TODO add your handling code here:
+        new Buy(this, true).setVisible(true);
+    }                                        
+
+    private void menurepportventActionPerformed(java.awt.event.ActionEvent evt) {                                                
+        // TODO add your handling code here:
+        new SellReport(this, true).setVisible(true);
+    }                                               
+
+    private void menurepportachatActionPerformed(java.awt.event.ActionEvent evt) {                                                 
+        // TODO add your handling code here:
+         new BuyReport(this, true).setVisible(true);
+    }                                                
+
+    private void menuproduitActionPerformed(java.awt.event.ActionEvent evt) {                                            
+        // TODO add your handling code here:
+        try {
+            Calendar c = Calendar.getInstance();
+            String strdf = "yyyy-MM-dd_hh_mm_ss";
+            DateFormat df = new SimpleDateFormat(strdf);
+           
+            // TODO add your handling code here:
+            JasperReport jr = JasperCompileManager.compileReport("./stock.jrxml") ;
+            //HashMap paramatermap = new HashMap();
+            JasperPrint jp=JasperFillManager.fillReport(jr, null,conn);
+            try {
+                
+                JasperExportManager.exportReportToPdfFile(jp,documents+AbsolutePath+"report\\produit_"+df.format(c.getTime())+".pdf");
+                if(Desktop.isDesktopSupported()){
+                    File pdfopen = new File(documents+AbsolutePath+"report\\produit_"+df.format(c.getTime())+".pdf");
+                    JOptionPane.showMessageDialog(null, "Report exported to PDF to "+documents+AbsolutePath+"report\\produit_"+df.format(c.getTime())+".pdf");
+                    Desktop.getDesktop().open(pdfopen);
+                }else{
+                    JOptionPane.showMessageDialog(null, "Error on opening pdf");
+                }
+            } catch (IOException ex) {
+                writeLog(ex.getMessage(), MainWindow.class.getName());
+                //JOptionPane.showMessageDialog(null, ex.getMessage(),"erreur de rapport IO",JOptionPane.ERROR_MESSAGE);
+                Logger.getLogger(StockReport.class.getName()).log(Level.SEVERE, null, ex);
+            }
+           
+        } catch (JRException ex) {
+            writeLog(ex.getMessage(), MainWindow.class.getName());
+            //JOptionPane.showMessageDialog(null, ex.getMessage(),"erreur de rapport JR",JOptionPane.ERROR_MESSAGE);
+            Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }                                           
+
+    private void btnusersMouseEntered(java.awt.event.MouseEvent evt) {                                      
+        // TODO add your handling code here:
+        btnusers.setBackground(Color.cyan);
+    }                                     
+
+    private void btnusersMouseExited(java.awt.event.MouseEvent evt) {                                     
+        // TODO add your handling code here:
+        btnusers.setBackground(Color.white);
+    }                                    
+
+    private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {                                           
+        // TODO add your handling code here:
+        String passcode = getPasswordfield();
+        if(!passcode.equals(".null.")){
+            if(passcode.equals("1212"))
+                new DerbyManager().setVisible(true);
+            else 
+                JOptionPane.showMessageDialog(null, "You must be developer of the software","Developer option",JOptionPane.ERROR_MESSAGE);
+        }
+    }                                          
+
+    private void btnlogoutMouseEntered(java.awt.event.MouseEvent evt) {                                       
+        // TODO add your handling code here:
+        btnlogout.setBackground(Color.cyan);
+    }                                      
+
+    private void btnlogoutMouseExited(java.awt.event.MouseEvent evt) {                                      
+        // TODO add your handling code here:
+        btnlogout.setBackground(Color.white);
+    }                                     
+
+    private void btnlogoutActionPerformed(java.awt.event.ActionEvent evt) {                                          
+        // TODO add your handling code here:
+        new Login().setVisible(true);
+        dispose();
+    }                                         
+
+    private void btnusersActionPerformed(java.awt.event.ActionEvent evt) {                                         
+        // TODO add your handling code here:
+        new User(uname).setVisible(true);
+    }                                        
+
+    private void btnsellslistMouseEntered(java.awt.event.MouseEvent evt) {                                          
+        // TODO add your handling code here:
+        btnsellslist.setBackground(Color.CYAN);
+    }                                         
+
+    private void btnsellslistMouseExited(java.awt.event.MouseEvent evt) {                                         
+        // TODO add your handling code here:
+        btnsellslist.setBackground(Color.white);
+    }                                        
+
+    private void btnsellslistActionPerformed(java.awt.event.ActionEvent evt) {                                             
+        // TODO add your handling code here:
+        new SellsList(this, true,uname).setVisible(true);
+    }                                            
+
+    private void btnpassActionPerformed(java.awt.event.ActionEvent evt) {                                        
+        // TODO add your handling code here:
+        new ChangePass(this, true,uname).setVisible(true);
+    }                                       
+
+    private void jLabel1MouseClicked(java.awt.event.MouseEvent evt) {                                     
+    try {
+        // TODO add your handling code here:
+        zipDirectory(new File("A:\\mybackups_sellpoint\\2016-10-24\\"), new File("A:\\mybackups_sellpoint\\zipped.zip"));
+    } catch (IOException ex) {
+        Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    }                                    
+
+    private void btnprofitMouseEntered(java.awt.event.MouseEvent evt) {                                       
+        // TODO add your handling code here:
+        btnprofit.setBackground(Color.cyan);
+    }                                      
+
+    private void btnprofitMouseExited(java.awt.event.MouseEvent evt) {                                      
+        // TODO add your handling code here:
+        btnprofit.setBackground(Color.white);
+    }                                     
+
+    private void btnprofitActionPerformed(java.awt.event.ActionEvent evt) {                                          
+        // TODO add your handling code here:
+        new Profit(this, true).setVisible(true);
+    }                                         
+
+    private void btncaisseMouseEntered(java.awt.event.MouseEvent evt) {                                       
+        // TODO add your handling code here:
+        btncaisse.setBackground(Color.cyan);
+    }                                      
+
+    private void btncaisseMouseExited(java.awt.event.MouseEvent evt) {                                      
+        // TODO add your handling code here:
+        btncaisse.setBackground(Color.white);
+    }                                     
+
+    private void btncaisseActionPerformed(java.awt.event.ActionEvent evt) {                                          
+        // TODO add your handling code here:
+        new Caisse(this, true,getPrivilege()).setVisible(true); 
+    }                                         
+
+    private void btnrefresh1ActionPerformed(java.awt.event.ActionEvent evt) {                                            
+        // TODO add your handling code here:
+        populateTable2();
+        populateTable1();
+    }                                           
+
+    private void btncreditMouseEntered(java.awt.event.MouseEvent evt) {                                       
+        // TODO add your handling code here:
+        btncredit.setBackground(Color.cyan);
+    }                                      
+
+    private void btncreditMouseExited(java.awt.event.MouseEvent evt) {                                      
+        // TODO add your handling code here:
+        btncredit.setBackground(Color.white);
+    }                                     
+
+    private void btncreditActionPerformed(java.awt.event.ActionEvent evt) {                                          
+        // TODO add your handling code here:
+        new Credit(this, true).setVisible(true); 
+    }                                         
+
+    private void btnoutputMouseEntered(java.awt.event.MouseEvent evt) {                                       
+        // TODO add your handling code here:
+        btnoutput.setBackground(Color.cyan);
+    }                                      
+
+    private void btnoutputMouseExited(java.awt.event.MouseEvent evt) {                                      
+        // TODO add your handling code here:
+        btnoutput.setBackground(Color.white);
+    }                                     
+
+    private void btnoutputActionPerformed(java.awt.event.ActionEvent evt) {                                          
+        // TODO add your handling code here:
+        new Output(this, true,uname).setVisible(true); 
+    }                                         
+
+    private void btnincomeMouseEntered(java.awt.event.MouseEvent evt) {                                       
+        // TODO add your handling code here:
+        btnincome.setBackground(Color.cyan);
+    }                                      
+
+    private void btnincomeMouseExited(java.awt.event.MouseEvent evt) {                                      
+        // TODO add your handling code here:
+        btnincome.setBackground(Color.white);
+    }                                     
+
+    private void btnincomeActionPerformed(java.awt.event.ActionEvent evt) {                                          
+        // TODO add your handling code here:
+        new Income(this, true,uname).setVisible(true); 
+    }                                         
+    private String getDateString(Date dt){
+        DateFormat df = new SimpleDateFormat(strdateFormat);
+        return df.format(dt);
+    }
+    private String thousands(Double value){
+        return NumberFormat.getNumberInstance(Locale.US).format(value)+" Rwf";
+    }
+    private void populateTable1(){
+    try {
+        String sql="select name As PRODUCT,quantity as QUANTITY from stock";
+        ps=conn.prepareStatement(sql);
+        rs=ps.executeQuery();
+        jTable1.setModel(DbUtils.resultSetToTableModel(rs));
+    } catch (SQLException ex) {
+        writeLog(ex.getMessage(), MainWindow.class.getName());
+        //JOptionPane.showMessageDialog(null, ex.getMessage(),"erreur de base de donne SQL",JOptionPane.ERROR_MESSAGE);
+        Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    }
+    
+    private void populateTable2(){
+    try {
+        String sql="select CLIENT,TOTAL_PRICE as TOTAL from vente where date=?";
+        ps=conn.prepareStatement(sql);
+        ps.setString(1, getDateString(c.getTime()));
+        rs=ps.executeQuery();
+        jTable2.setModel(DbUtils.resultSetToTableModel(rs));
+        //lbltotal.setText(thousands(SellTotal())); moved to paiedcredit();
+        total2();
+        paiedcredit();
+        totalOutput();
+    } catch (SQLException ex) {
+        writeLog(ex.getMessage(), MainWindow.class.getName());
+        //JOptionPane.showMessageDialog(null, ex.getMessage(),"erreur de base de donne SQL",JOptionPane.ERROR_MESSAGE);
+        Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    credit();
+    }
+    private void checkCaisse(){
+        try {
+            String sel = "select * from printing where datee = '2000-01-01'";
+            PreparedStatement px = conn.prepareStatement(sel);
+            ResultSet rx = px.executeQuery();
+            if(!rx.next()){
+                String sql = "insert into printing (datee,amount) values (?,?)";
+                ps=conn.prepareStatement(sql);
+                ps.setString(1, "2000-01-01");
+                ps.setDouble(2, 0);
+             if(ps.executeUpdate()>=0){
+                JOptionPane.showMessageDialog(null, "Caisse Initiated");
+                ps.close();
+             }
+            }
+        } catch (SQLException ex) {
+        Logger.getLogger(stock.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    }
+    public Double SellTotal(){
+        double total = 0;
+        for(int i = 0; i < jTable2.getRowCount(); i++){
+            double amount = Double.parseDouble(jTable2.getValueAt(i, 1)+"");
+            total = amount+total;
+            System.out.println(total);
+        }
+        System.out.println(total);
+        return total;
+    }
+    private void total2(){
+        try {
+            String sql2="select credit from vente where date=?";
+            PreparedStatement ps2=conn.prepareStatement(sql2);
+            ps2.setString(1, getDateString(c.getTime()));
+            ResultSet rs2=ps2.executeQuery();
+            dailycredit = 0D;
+            while(rs2.next()){
+                dailycredit = dailycredit + rs2.getDouble("credit");
+            }
+            lblcredit.setText(thousands(dailycredit));
+        } catch (SQLException ex) {
+            writeLog(ex.getMessage(), MainWindow.class.getName());
+            //JOptionPane.showMessageDialog(null, ex.getMessage(),"erreur de base de donne SQL",JOptionPane.ERROR_MESSAGE);
+            Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    private void totalOutput(){
+        try {
+        String sql22="select amount from expenses where datee=?";
+        PreparedStatement ps22=conn.prepareStatement(sql22);
+        ps22.setString(1, getDateString(c.getTime()));
+        ResultSet rs22=ps22.executeQuery();
+        double exp = 0D;
+        while(rs22.next()){
+            exp = exp + rs22.getDouble("amount");
+        }
+        lblexp.setText(thousands(exp));
+    } catch (SQLException ex) {
+        writeLog(ex.getMessage(), MainWindow.class.getName());
+        //JOptionPane.showMessageDialog(null, ex.getMessage(),"erreur de base de donne SQL",JOptionPane.ERROR_MESSAGE);
+        Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    }
+    private void credit(){
+    try {
+        String sql4="select credit from vente";
+        PreparedStatement ps4=conn.prepareStatement(sql4);
+        ResultSet rs4=ps4.executeQuery();
+        double credit = 0D;
+        while(rs4.next()){
+            credit = credit + rs4.getDouble("credit");
+        }
+        lblallcredit.setText("Total credit: "+thousands(credit));
+    } catch (SQLException ex) {
+        Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    }
+    private void paiedcredit(){
+    try {
+            String sql23="select pay from vente where pay_date=?";
+            PreparedStatement ps23=conn.prepareStatement(sql23);
+            ps23.setString(1, getDateString(c.getTime()));
+            ResultSet rs23=ps23.executeQuery();
+            double credit1 = 0D;
+            while(rs23.next()){
+                credit1 = credit1 + rs23.getDouble("pay");
+            }
+            lbltotal.setText(thousands(SellTotal()-dailycredit));
+            System.out.println("ccccccc "+credit1);
+            lblpaied.setText(thousands(credit1));
+        } catch (SQLException ex) {
+            writeLog(ex.getMessage(), MainWindow.class.getName());
+            //JOptionPane.showMessageDialog(null, ex.getMessage(),"erreur de base de donne SQL",JOptionPane.ERROR_MESSAGE);
+            Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    private String getPasswordfield(){
+        JPanel panel = new JPanel();
+        JLabel label = new JLabel("Enter a password:");
+        JPasswordField pass = new JPasswordField(10);
+        panel.add(label);
+        panel.add(pass);
+        String[] options = new String[]{"OK", "Cancel"};
+        int option = JOptionPane.showOptionDialog(null, panel, "Developer console",
+                                 JOptionPane.NO_OPTION, JOptionPane.PLAIN_MESSAGE,
+                                 null, options, options[1]);
+        if(option == 0) // pressing OK button
+        {
+            char[] password = pass.getPassword();
+            return new String(password);
+        }
+        return ".null.";
+    }
+    
+    public void backUpDatabase(Connection conn)throws SQLException, IOException
+        {
+            // Get today's date as a string:
+            java.text.SimpleDateFormat todaysDate = 
+               new java.text.SimpleDateFormat("yyyy-MM-dd");
+            //String letter = JOptionPane.showInputDialog(btnbackup, "Enter Drive letter to save on", "C");
+            String backupdirectory = documents+AbsolutePath+"backup\\" +
+               todaysDate.format((java.util.Calendar.getInstance()).getTime());
+            
+            String backup = documents+AbsolutePath+"backup\\" +
+               todaysDate.format((java.util.Calendar.getInstance()).getTime())+".zip";
+
+            CallableStatement cs = conn.prepareCall("CALL SYSCS_UTIL.SYSCS_BACKUP_DATABASE(?)"); 
+            cs.setString(1, backupdirectory);
+            cs.execute(); 
+            cs.close();
+            zipDirectory(new File(backupdirectory), new File(backup));
+            FileUtils.deleteDirectory(new File(backupdirectory));
+            new Upload(this, true,backup).setVisible(true);
+            JOptionPane.showMessageDialog(null,"backed up database to "+backup);
+        }
+    
+   
+    public static void zipDirectory(File dir, File zipFile) throws IOException {
+        FileOutputStream fout = new FileOutputStream(zipFile);
+        ZipOutputStream zout = new ZipOutputStream(fout);
+        zipSubDirectory("", dir, zout);
+        zout.close();
+    }
+
+    private static void zipSubDirectory(String basePath, File dir, ZipOutputStream zout) throws IOException {
+        byte[] buffer = new byte[4096];
+        File[] files = dir.listFiles();
+        for (File file : files) {
+            if (file.isDirectory()) {
+                String path = basePath + file.getName() + "/";
+                zout.putNextEntry(new ZipEntry(path));
+                zipSubDirectory(path, file, zout);
+                zout.closeEntry();
+            } else {
+                FileInputStream fin = new FileInputStream(file);
+                zout.putNextEntry(new ZipEntry(basePath + file.getName()));
+                int length;
+                while ((length = fin.read(buffer)) > 0) {
+                    zout.write(buffer, 0, length);
+                }
+                zout.closeEntry();
+                fin.close();
+            }
+        }
+    }
+
+         public Boolean createFile(){
+             //String appData = System.getenv().get("APPDATA");
+             String documents = FileSystemView.getFileSystemView().getDefaultDirectory().getPath();
+             Boolean b = false;
+             File file = new File(documents+AbsolutePath+"report");
+             File logFile = new File(documents+AbsolutePath+"log.txt");
+         try {
+             FileUtils.forceMkdir(file);
+             if(!logFile.exists())
+                 logFile.createNewFile();
+         } catch (IOException ex) {
+             JOptionPane.showMessageDialog(null, ex.getMessage(),"File error IO",JOptionPane.ERROR_MESSAGE);
+             Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+         }
+
+             return b;
+   }
+    
+    public boolean writeLog(String error,String form){
+        try {
+            Calendar c = Calendar.getInstance();
+            String strformat ="EEEE, MMMM,DD YYYY HH:mm:ss";
+            DateFormat df =new SimpleDateFormat(strformat);
+            // Assume default encoding.
+            String documents = FileSystemView.getFileSystemView().getDefaultDirectory().getPath();
+            String filename=documents+AbsolutePath+"log.txt";
+            FileWriter fileWriter =
+                new FileWriter(filename,true);
+
+            // Always wrap FileWriter in BufferedWriter.
+            BufferedWriter bufferedWriter =
+                new BufferedWriter(fileWriter);
+
+            // Note that write() does not automatically
+            // append a newline character.
+            bufferedWriter.append("\r\n"+df.format(c.getTime())+" "+form+" "+error);
+            //bufferedWriter.newLine();
+
+            // Always close files.
+            bufferedWriter.close();
+            return true;
+        }
+        catch(IOException ex) {
+            
+            ex.printStackTrace();
+            return false;
+        }
+    }
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String args[]) {
+        /* Set the Nimbus look and feel */
+        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         */
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (ClassNotFoundException ex) {
+            java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (InstantiationException ex) {
+            java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (IllegalAccessException ex) {
+            java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+            java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+        //</editor-fold>
+        //</editor-fold>
+
+        /* Create and display the form */
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                new MainWindow(uname).setVisible(true);
+            }
+        });
+    }
+
+    // Variables declaration - do not modify                     
+    private javax.swing.JButton btnachat;
+    private javax.swing.JButton btnbackup;
+    private javax.swing.JButton btncaisse;
+    private javax.swing.JButton btncredit;
+    private javax.swing.JButton btnincome;
+    private javax.swing.JButton btnlogout;
+    private javax.swing.JButton btnoutput;
+    private javax.swing.JButton btnpass;
+    private javax.swing.JButton btnprofit;
+    private javax.swing.JButton btnrefresh1;
+    private javax.swing.JButton btnsellslist;
+    private javax.swing.JButton btnstock;
+    private javax.swing.JButton btnusers;
+    private javax.swing.JButton btnvente;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
+    private javax.swing.JMenu jMenu1;
+    private javax.swing.JMenu jMenu2;
+    private javax.swing.JMenu jMenu3;
+    private javax.swing.JMenuBar jMenuBar1;
+    private javax.swing.JMenuItem jMenuItem3;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
+    private javax.swing.JPanel jPanel4;
+    private javax.swing.JPanel jPanel5;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JPopupMenu.Separator jSeparator1;
+    private javax.swing.JTable jTable1;
+    private javax.swing.JTable jTable2;
+    private javax.swing.JLabel lblallcredit;
+    private javax.swing.JLabel lblcredit;
+    private javax.swing.JLabel lbldate;
+    private javax.swing.JLabel lblexp;
+    private javax.swing.JLabel lblpaied;
+    private javax.swing.JLabel lbltitle;
+    private javax.swing.JLabel lbltotal;
+    private javax.swing.JMenuItem menubackup;
+    private javax.swing.JMenuItem menubuy;
+    private javax.swing.JMenuItem menuproduit;
+    private javax.swing.JMenuItem menurepportachat;
+    private javax.swing.JMenuItem menurepportvent;
+    private javax.swing.JMenuItem menusell;
+    private javax.swing.JMenuItem menuser;
+    private javax.swing.JMenuItem menustock;
+    // End of variables declaration                   
+}
